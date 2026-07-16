@@ -1,0 +1,10 @@
+# credenziali e ambiente — MAI nel repo
+.env
+*.env
+wp-config.php
+
+# sistema / editor
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
