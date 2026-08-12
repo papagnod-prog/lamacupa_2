@@ -51,7 +51,8 @@
       { name:'Luma 250ml', cat:'Coratina monovarietale', price:'€12,00', tag:'Best seller' },
       { name:'Luma 500ml', cat:'Coratina monovarietale', price:'€19,00', tag:'' },
       { name:'Orcio in terracotta', cat:'Edizione speciale 500ml', price:'€34,00', tag:'Idea regalo' },
-      { name:'Confezione Degustazione', cat:'3 × 100ml', price:'€22,00', tag:'' }
+      { name:'Confezione Degustazione', cat:'3 × 100ml', price:'€22,00', tag:'' },
+      { name:'Prodotto 5', cat:'Categoria', price:'€0,00', tag:'' }
     ]
   };
 
@@ -76,7 +77,8 @@
     { id:'a-p1',     lbl:'Prodotto 1',         sub:'Vetrina · Luma 250ml' },
     { id:'a-p2',     lbl:'Prodotto 2',         sub:'Vetrina · Luma 500ml' },
     { id:'a-p3',     lbl:'Prodotto 3',         sub:'Vetrina · Orcio' },
-    { id:'a-p4',     lbl:'Prodotto 4',         sub:'Vetrina · Degustazione' }
+    { id:'a-p4',     lbl:'Prodotto 4',         sub:'Vetrina · Degustazione' },
+    { id:'a-p5',     lbl:'Prodotto 5',         sub:'Vetrina · Prodotto 5' }
   ];
   var PAGEDEFS = [
     { slug:'storia', name:'La Storia', hero:'story-hero' },

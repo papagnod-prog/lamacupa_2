@@ -163,6 +163,11 @@
         <div class="card-body"><h4 data-en="Tasting box">Confezione Degustazione</h4><div class="ct">3 × 100ml</div>
           <div class="card-foot"><span class="p">€22,00</span><span class="add" data-en="+ Cart">+ Carrello</span></div></div>
       </a>
+      <a class="card" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">
+        <div class="card-media"><div class="imgslot" id="a-p5"></div></div>
+        <div class="card-body"><h4 data-en="Product 5">Prodotto 5</h4><div class="ct">Categoria</div>
+          <div class="card-foot"><span class="p">€0,00</span><span class="add" data-en="+ Cart">+ Carrello</span></div></div>
+      </a>
     </div>
   </div>
 </section>
