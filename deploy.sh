@@ -1,16 +1,15 @@
 #!/bin/sh
 # Azione di distribuzione per Plesk (Git → "Attiva azioni di distribuzione aggiuntive")
 # Copia tema e plugin nelle cartelle di WordPress dopo ogni push.
+#
+# Lo script viene eseguito da Plesk con working directory = wp-content
+# (il "Percorso server" configurato), quindi usiamo percorsi relativi:
+# nessun path assoluto, per evitare problemi di permessi/chroot sul server.
 
-# PERCORSO ASSOLUTO DEL TUO DOMINIO SU PLESK
-DOCROOT="/var/www/vhosts/lamacupa.it/shop.lamacupa.it"
+rm -rf themes/lamacupa-theme
+mkdir -p themes/lamacupa-theme
+cp -a lamacupa-theme/. themes/lamacupa-theme/
 
-# Copia senza rsync (non disponibile sul server): elimina la cartella di
-# destinazione e ricopia da zero il contenuto aggiornato dal repository.
-rm -rf "$DOCROOT/wp-content/themes/lamacupa-theme"
-mkdir -p "$DOCROOT/wp-content/themes/lamacupa-theme"
-cp -a lamacupa-theme/. "$DOCROOT/wp-content/themes/lamacupa-theme/"
-
-rm -rf "$DOCROOT/wp-content/plugins/lamacupa-pannello"
-mkdir -p "$DOCROOT/wp-content/plugins/lamacupa-pannello"
-cp -a lamacupa-pannello/. "$DOCROOT/wp-content/plugins/lamacupa-pannello/"
+rm -rf plugins/lamacupa-pannello
+mkdir -p plugins/lamacupa-pannello
+cp -a lamacupa-pannello/. plugins/lamacupa-pannello/
