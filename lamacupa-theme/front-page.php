@@ -125,12 +125,8 @@
   <div class="wrap">
     <span class="eyebrow" data-en="Awards &amp; Recognition">Premi &amp; Riconoscimenti</span>
     <h2 style="font-size:clamp(30px,3.8vw,48px);font-weight:400;margin-top:16px" data-en="A recognised quality">Una qualità riconosciuta</h2>
-    <div class="premi-row">
-      <div class="award"><div class="medal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="9" r="6"/><path d="M9 14l-2 7 5-3 5 3-2-7"/></svg></div><h4 data-en="Intense Fruity">Fruttato Intenso</h4><p data-en="Monocultivar section">Sezione monocultivar</p></div>
-      <div class="award"><div class="medal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="9" r="6"/><path d="M9 14l-2 7 5-3 5 3-2-7"/></svg></div><h4 data-en="EVO Oil of the Year">Olio EVO dell'anno</h4><p data-en="Regional guide">Guida regionale</p></div>
-      <div class="award"><div class="medal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="9" r="6"/><path d="M9 14l-2 7 5-3 5 3-2-7"/></svg></div><h4 data-en="Grand Mention">Gran Menzione</h4><p data-en="Oil competition">Concorso oleario</p></div>
-      <div class="award"><div class="medal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="9" r="6"/><path d="M9 14l-2 7 5-3 5 3-2-7"/></svg></div><h4 data-en="Coratina Excellence">Eccellenza Coratina</h4><p data-en="Puglia selection">Selezione Puglia</p></div>
-    </div>
+    <p class="lead" data-en="The quality of our oil recognised by the best experts in the industry" style="max-width:620px;margin:0 auto">La qualità del nostro olio riconosciuta dai migliori esperti del settore</p>
+    <div style="margin-top:30px"><?php echo do_shortcode( '[lamacupa_premi mode="logo"]' ); ?></div>
     <a class="btn btn-ghost" href="<?php echo esc_url( home_url( '/premi/' ) ); ?>" style="margin-top:46px" data-en="All awards">Tutti i premi</a>
   </div>
 </section>

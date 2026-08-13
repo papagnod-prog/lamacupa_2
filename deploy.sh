@@ -13,3 +13,7 @@ cp -a lamacupa-theme/. themes/lamacupa-theme/
 rm -rf plugins/lamacupa-pannello
 mkdir -p plugins/lamacupa-pannello
 cp -a lamacupa-pannello/. plugins/lamacupa-pannello/
+
+rm -rf plugins/lamacupa-premi
+mkdir -p plugins/lamacupa-premi
+cp -a lamacupa-premi/. plugins/lamacupa-premi/
