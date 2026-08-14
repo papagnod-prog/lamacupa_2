@@ -216,7 +216,7 @@
   function applyShop(cfg) {
     var prods = cfg.shop;
     if (!prods || !prods.length) return;
-    var grid = document.querySelector('.cards');
+    var grid = document.querySelector('#shop .cards');
     if (!grid) return;
     var cards = grid.querySelectorAll('.card');
     prods.forEach(function (p, idx) {
