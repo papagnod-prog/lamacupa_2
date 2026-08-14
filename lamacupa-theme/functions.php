@@ -40,6 +40,19 @@ add_action( 'after_setup_theme', function () {
  * standard "Pagine/Archivi/Categorie" mai configurati). */
 remove_action( 'woocommerce_sidebar', 'woocommerce_get_sidebar' );
 
+/* Le pagine WooCommerce di default (prodotto singolo, carrello, checkout,
+ * "il mio account"…) usano di serie un wrapper <main> senza contenitore:
+ * il contenuto tocca i bordi della pagina invece di stare dentro .wrap
+ * come nel resto del sito. Sostituiamo il wrapper con quello del tema. */
+remove_action( 'woocommerce_before_main_content', 'woocommerce_output_content_wrapper', 10 );
+remove_action( 'woocommerce_after_main_content', 'woocommerce_output_content_wrapper_end', 10 );
+add_action( 'woocommerce_before_main_content', function () {
+	echo '<div class="wrap" style="padding:50px 40px">';
+} );
+add_action( 'woocommerce_after_main_content', function () {
+	echo '</div>';
+} );
+
 /* ---- Menu di fallback (se nessun menu è assegnato in Aspetto → Menu) ---- */
 function lamacupa_default_menu() {
 	$items = array(
