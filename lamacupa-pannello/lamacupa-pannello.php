@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LMCP_VER', '1.8.0' );
+define( 'LMCP_VER', '1.9.0' );
 define( 'LMCP_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LMCP_URL', plugin_dir_url( __FILE__ ) );
 define( 'LMCP_OPT', 'lamacupa_pannello_config' );
