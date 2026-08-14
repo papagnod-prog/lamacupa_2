@@ -96,10 +96,11 @@ if ( ! function_exists( 'lmcp_defaults' ) ) {
 				'contatti' => array( 'eyebrow' => 'Contatti', 'title' => 'Parliamone', 'intro' => '' ),
 			),
 			'shop'       => array(
-				array( 'name' => 'Luma 250ml', 'cat' => 'Coratina monovarietale', 'price' => '&euro;12,00', 'tag' => 'Best seller' ),
-				array( 'name' => 'Luma 500ml', 'cat' => 'Coratina monovarietale', 'price' => '&euro;19,00', 'tag' => '' ),
-				array( 'name' => 'Orcio in terracotta', 'cat' => 'Edizione speciale 500ml', 'price' => '&euro;34,00', 'tag' => 'Idea regalo' ),
-				array( 'name' => 'Confezione Degustazione', 'cat' => '3 x 100ml', 'price' => '&euro;22,00', 'tag' => '' ),
+				array( 'product_id' => 0, 'tag' => '' ),
+				array( 'product_id' => 0, 'tag' => '' ),
+				array( 'product_id' => 0, 'tag' => '' ),
+				array( 'product_id' => 0, 'tag' => '' ),
+				array( 'product_id' => 0, 'tag' => '' ),
 			),
 		);
 
@@ -202,10 +203,8 @@ if ( ! function_exists( 'lmcp_sanitize_config' ) ) {
 					continue;
 				}
 				$out['shop'][] = array(
-					'name'  => isset( $p['name'] ) ? wp_kses( (string) $p['name'], $allowed ) : '',
-					'cat'   => isset( $p['cat'] ) ? wp_kses( (string) $p['cat'], $allowed ) : '',
-					'price' => isset( $p['price'] ) ? sanitize_text_field( (string) $p['price'] ) : '',
-					'tag'   => isset( $p['tag'] ) ? sanitize_text_field( (string) $p['tag'] ) : '',
+					'product_id' => isset( $p['product_id'] ) ? absint( $p['product_id'] ) : 0,
+					'tag'        => isset( $p['tag'] ) ? sanitize_text_field( (string) $p['tag'] ) : '',
 				);
 			}
 		}
@@ -259,12 +258,30 @@ if ( ! function_exists( 'lmcp_get_config' ) ) {
 
 if ( ! function_exists( 'lmcp_admin_data' ) ) {
 	function lmcp_admin_data() {
+		$products = array();
+		if ( class_exists( 'WooCommerce' ) ) {
+			$wc_products = wc_get_products( array(
+				'status'  => 'publish',
+				'limit'   => -1,
+				'orderby' => 'title',
+				'order'   => 'ASC',
+			) );
+			foreach ( $wc_products as $wp_product ) {
+				$products[] = array(
+					'id'    => $wp_product->get_id(),
+					'name'  => $wp_product->get_name(),
+					'price' => wp_strip_all_tags( $wp_product->get_price_html() ),
+					'image' => get_the_post_thumbnail_url( $wp_product->get_id(), 'thumbnail' ),
+				);
+			}
+		}
 		return array(
 			'ajax'     => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'lmcp_save' ),
 			'config'   => lmcp_get_config(),
 			'defaults' => lmcp_defaults(),
 			'preview'  => home_url( '/' ),
+			'products' => $products,
 		);
 	}
 }

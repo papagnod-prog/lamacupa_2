@@ -212,26 +212,9 @@
     });
   }
 
-  /* 5. SHOP */
-  function applyShop(cfg) {
-    var prods = cfg.shop;
-    if (!prods || !prods.length) return;
-    var grid = document.querySelector('#shop .cards');
-    if (!grid) return;
-    var cards = grid.querySelectorAll('.card');
-    prods.forEach(function (p, idx) {
-      var card = cards[idx];
-      if (!card) return;
-      if (p.name)  setRich(card.querySelector('.card-body h4'), p.name);
-      if (p.cat)   setRich(card.querySelector('.card-body .ct'), p.cat);
-      if (p.price) setRich(card.querySelector('.card-foot .p'), p.price);
-      if (p.tag != null) {
-        var tag = card.querySelector('.card-tag');
-        if (p.tag === '') { if (tag) tag.style.display = 'none'; }
-        else if (tag) { tag.style.display = ''; setRich(tag, p.tag); }
-      }
-    });
-  }
+  /* 5. SHOP — rimosso: la griglia Prodotti in Home ora è renderizzata
+   * direttamente in PHP (front-page.php) dai prodotti WooCommerce reali,
+   * niente più sovrascrittura testo lato client. */
 
   /* 6. LOGHI (header / footer) */
   function setLogo(sel, url, h) {
@@ -293,7 +276,6 @@
     try { applyBanner(cfg); }     catch (e) {}
     try { applyHero(cfg); }       catch (e) {}
     try { applyImages(cfg); }     catch (e) {}
-    try { applyShop(cfg); }       catch (e) {}
     try { applyBrand(cfg); }      catch (e) {}
     try { applyPages(cfg); }      catch (e) {}
   }

@@ -48,11 +48,11 @@
     brand: { logoHeader:'', logoFooter:'', logoH:34, logoF:40 },
     pages: {},
     shop: [
-      { name:'Luma 250ml', cat:'Coratina monovarietale', price:'€12,00', tag:'Best seller' },
-      { name:'Luma 500ml', cat:'Coratina monovarietale', price:'€19,00', tag:'' },
-      { name:'Orcio in terracotta', cat:'Edizione speciale 500ml', price:'€34,00', tag:'Idea regalo' },
-      { name:'Confezione Degustazione', cat:'3 × 100ml', price:'€22,00', tag:'' },
-      { name:'Prodotto 5', cat:'Categoria', price:'€0,00', tag:'' }
+      { product_id:0, tag:'' },
+      { product_id:0, tag:'' },
+      { product_id:0, tag:'' },
+      { product_id:0, tag:'' },
+      { product_id:0, tag:'' }
     ]
   };
 
@@ -73,12 +73,7 @@
     { id:'a-bottle', lbl:'Bottiglia Luma',     sub:'Sezione prodotto in evidenza' },
     { id:'a-story',  lbl:'La nostra storia',   sub:'Ritratto famiglia / mani al lavoro' },
     { id:'a-coratina', lbl:'Olive Coratina',   sub:'Fascia “il carattere”' },
-    { id:'a-orci',   lbl:'Orci in terracotta', sub:'Sezione edizione speciale' },
-    { id:'a-p1',     lbl:'Prodotto 1',         sub:'Vetrina · Luma 250ml' },
-    { id:'a-p2',     lbl:'Prodotto 2',         sub:'Vetrina · Luma 500ml' },
-    { id:'a-p3',     lbl:'Prodotto 3',         sub:'Vetrina · Orcio' },
-    { id:'a-p4',     lbl:'Prodotto 4',         sub:'Vetrina · Degustazione' },
-    { id:'a-p5',     lbl:'Prodotto 5',         sub:'Vetrina · Prodotto 5' }
+    { id:'a-orci',   lbl:'Orci in terracotta', sub:'Sezione edizione speciale' }
   ];
   var PAGEDEFS = [
     { slug:'storia', name:'La Storia', hero:'story-hero' },
@@ -337,20 +332,24 @@
   /* ---- PRODOTTI ---- */
   PAGES.shop = function(){
     var p = el('<div class="page" data-p="shop"></div>');
+    var products = (window.LMCP_ADMIN && LMCP_ADMIN.products) || [];
     p.innerHTML =
       '<div class="phead"><div class="ek">Vetrina &amp; Shop</div><h1>Prodotti</h1>'
-      +'<p>Le schede della selezione prodotti mostrate in Home. Modifica nome, categoria, prezzo ed etichetta. Lascia l\'etichetta vuota per nasconderla.</p></div>'
+      +'<p>Scegli fino a 5 prodotti reali dal catalogo da mostrare in Home. Nome, prezzo e foto sono sempre presi dal prodotto scelto — nessun dato da duplicare.</p></div>'
       +'<div id="prodList"></div>';
     var list=p.querySelector('#prodList');
+    if (!products.length) {
+      list.innerHTML = '<p style="opacity:.7">Nessun prodotto pubblicato trovato. Pubblica prodotti in WooCommerce per poterli scegliere qui.</p>';
+    }
     state.shop.forEach(function(pr,i){
+      var opts = '<option value="0">— Nessun prodotto —</option>' + products.map(function(prod){
+        return '<option value="'+prod.id+'"'+(String(pr.product_id)===String(prod.id)?' selected':'')+'>'+esc(prod.name)+' ('+esc(prod.price)+')</option>';
+      }).join('');
       var row = el('<div class="prod"><div class="ph"><span class="n">Prodotto '+(i+1)+'</span></div>'
-        +'<div class="field"><label>Nome</label><input class="in" data-k="name" value="'+esc(pr.name)+'"></div>'
-        +'<div class="row"><div class="field"><label>Categoria</label><input class="in" data-k="cat" value="'+esc(pr.cat)+'"></div>'
-        +'<div class="field"><label>Prezzo</label><input class="in" data-k="price" value="'+esc(pr.price)+'"></div></div>'
+        +'<div class="field"><label>Prodotto</label><select class="in" data-k="product_id">'+opts+'</select></div>'
         +'<div class="field"><label>Etichetta (badge)</label><input class="in" data-k="tag" value="'+esc(pr.tag)+'" placeholder="es. Best seller — vuoto = nessuna"></div></div>');
-      row.querySelectorAll('[data-k]').forEach(function(inp){
-        inp.addEventListener('input', function(){ state.shop[i][inp.getAttribute('data-k')]=inp.value; commitSoon(); });
-      });
+      row.querySelector('[data-k="product_id"]').addEventListener('change', function(){ state.shop[i].product_id = parseInt(this.value,10)||0; commitSoon(); });
+      row.querySelector('[data-k="tag"]').addEventListener('input', function(){ state.shop[i].tag = this.value; commitSoon(); });
       list.appendChild(row);
     });
     return p;

@@ -139,31 +139,34 @@
       <a class="btn btn-ghost" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>" data-en="All products">Tutti i prodotti</a>
     </div>
     <div class="cards">
-      <a class="card" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">
-        <div class="card-media"><span class="card-tag" data-en="Best seller">Best seller</span><div class="imgslot" id="a-p1"></div></div>
-        <div class="card-body"><h4>Luma 250ml</h4><div class="ct" data-en="Coratina monovarietal">Coratina monovarietale</div>
-          <div class="card-foot"><span class="p">€12,00</span><span class="add" data-en="+ Cart">+ Carrello</span></div></div>
+      <?php
+      $lmcp_cfg  = function_exists( 'lmcp_get_config' ) ? lmcp_get_config() : array();
+      $lmcp_shop = ( ! empty( $lmcp_cfg['shop'] ) && is_array( $lmcp_cfg['shop'] ) ) ? $lmcp_cfg['shop'] : array();
+      foreach ( $lmcp_shop as $lmcp_item ) :
+        $lmcp_pid = ! empty( $lmcp_item['product_id'] ) ? (int) $lmcp_item['product_id'] : 0;
+        $lmcp_product = ( $lmcp_pid && function_exists( 'wc_get_product' ) ) ? wc_get_product( $lmcp_pid ) : null;
+        if ( ! $lmcp_product ) {
+          continue;
+        }
+        $lmcp_cats = get_the_terms( $lmcp_pid, 'product_cat' );
+        $lmcp_cat_name = ( $lmcp_cats && ! is_wp_error( $lmcp_cats ) ) ? $lmcp_cats[0]->name : '';
+      ?>
+      <a class="card" href="<?php echo esc_url( get_permalink( $lmcp_pid ) ); ?>">
+        <div class="card-media">
+          <?php if ( ! empty( $lmcp_item['tag'] ) ) : ?><span class="card-tag"><?php echo esc_html( $lmcp_item['tag'] ); ?></span><?php endif; ?>
+          <?php if ( has_post_thumbnail( $lmcp_pid ) ) : ?>
+            <?php echo get_the_post_thumbnail( $lmcp_pid, 'woocommerce_thumbnail', array( 'style' => 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover' ) ); ?>
+          <?php else : ?>
+            <div class="imgslot"></div>
+          <?php endif; ?>
+        </div>
+        <div class="card-body">
+          <h4><?php echo esc_html( $lmcp_product->get_name() ); ?></h4>
+          <div class="ct"><?php echo esc_html( $lmcp_cat_name ); ?></div>
+          <div class="card-foot"><span class="p"><?php echo wp_kses_post( $lmcp_product->get_price_html() ); ?></span><span class="add" data-en="+ Cart">+ Carrello</span></div>
+        </div>
       </a>
-      <a class="card" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">
-        <div class="card-media"><div class="imgslot" id="a-p2"></div></div>
-        <div class="card-body"><h4>Luma 500ml</h4><div class="ct" data-en="Coratina monovarietal">Coratina monovarietale</div>
-          <div class="card-foot"><span class="p">€19,00</span><span class="add" data-en="+ Cart">+ Carrello</span></div></div>
-      </a>
-      <a class="card" href="<?php echo esc_url( home_url( '/orci/' ) ); ?>">
-        <div class="card-media"><span class="card-tag" data-en="Gift idea">Idea regalo</span><div class="imgslot" id="a-p3"></div></div>
-        <div class="card-body"><h4 data-en="Terracotta jar">Orcio in terracotta</h4><div class="ct" data-en="Special edition 500ml">Edizione speciale 500ml</div>
-          <div class="card-foot"><span class="p">€34,00</span><span class="add" data-en="+ Cart">+ Carrello</span></div></div>
-      </a>
-      <a class="card" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">
-        <div class="card-media"><div class="imgslot" id="a-p4"></div></div>
-        <div class="card-body"><h4 data-en="Tasting box">Confezione Degustazione</h4><div class="ct">3 × 100ml</div>
-          <div class="card-foot"><span class="p">€22,00</span><span class="add" data-en="+ Cart">+ Carrello</span></div></div>
-      </a>
-      <a class="card" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">
-        <div class="card-media"><div class="imgslot" id="a-p5"></div></div>
-        <div class="card-body"><h4 data-en="Product 5">Prodotto 5</h4><div class="ct">Categoria</div>
-          <div class="card-foot"><span class="p">€0,00</span><span class="add" data-en="+ Cart">+ Carrello</span></div></div>
-      </a>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>
