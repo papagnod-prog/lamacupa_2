@@ -35,6 +35,11 @@ add_action( 'after_setup_theme', function () {
 	add_theme_support( 'wc-product-gallery-slider' );
 } );
 
+/* Il tema è full-width senza sidebar: rimuove la sidebar di default che
+ * WooCommerce mostra su Shop e pagina prodotto (mostrava i widget
+ * standard "Pagine/Archivi/Categorie" mai configurati). */
+remove_action( 'woocommerce_sidebar', 'woocommerce_get_sidebar' );
+
 /* ---- Menu di fallback (se nessun menu è assegnato in Aspetto → Menu) ---- */
 function lamacupa_default_menu() {
 	$items = array(
