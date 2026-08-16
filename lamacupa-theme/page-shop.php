@@ -84,7 +84,15 @@ $lmcp_has_woo = class_exists( 'WooCommerce' );
             ?>
             <div class="card">
               <a href="<?php the_permalink(); ?>" class="card-media">
-                <?php if ( $product->is_on_sale() ) : ?><span class="card-tag" data-en="Sale">Offerta</span><?php endif; ?>
+                <?php
+                $lmpo_on = function_exists( 'lmpo_is_enabled' ) && lmpo_is_enabled( $product->get_id() );
+                if ( $lmpo_on ) :
+                  $lmpo_badge = get_post_meta( $product->get_id(), '_lmpo_badge_text', true ) ?: 'Disponibile in preordine';
+                  ?><span class="card-tag"><?php echo esc_html( $lmpo_badge ); ?></span><?php
+                elseif ( $product->is_on_sale() ) :
+                  ?><span class="card-tag" data-en="Sale">Offerta</span><?php
+                endif;
+                ?>
                 <?php
                 if ( has_post_thumbnail() ) {
                   the_post_thumbnail( 'woocommerce_thumbnail', array( 'style' => 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover' ) );
@@ -103,9 +111,9 @@ $lmcp_has_woo = class_exists( 'WooCommerce' );
                        data-quantity="1"
                        data-product_id="<?php echo esc_attr( $product->get_id() ); ?>"
                        class="add ajax_add_to_cart add_to_cart_button"
-                       rel="nofollow"><span data-en="+ Cart">+ Carrello</span></a>
+                       rel="nofollow"><span><?php echo esc_html( $product->add_to_cart_text() ); ?></span></a>
                   <?php else : ?>
-                    <a class="add" href="<?php the_permalink(); ?>" data-en="View">Vedi</a>
+                    <a class="add" href="<?php the_permalink(); ?>" data-en="View"><?php echo $lmpo_on ? esc_html( $product->add_to_cart_text() ) : 'Vedi'; ?></a>
                   <?php endif; ?>
                 </div>
               </div>
