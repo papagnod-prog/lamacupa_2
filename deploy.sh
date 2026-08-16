@@ -17,3 +17,7 @@ cp -a lamacupa-pannello/. plugins/lamacupa-pannello/
 rm -rf plugins/lamacupa-premi
 mkdir -p plugins/lamacupa-premi
 cp -a lamacupa-premi/. plugins/lamacupa-premi/
+
+rm -rf plugins/lamacupa-preordina
+mkdir -p plugins/lamacupa-preordina
+cp -a lamacupa-preordina/. plugins/lamacupa-preordina/
