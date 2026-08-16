@@ -279,6 +279,19 @@ function lmpo_is_enabled( $product_id ): bool {
     return get_post_meta( $product_id, LMPO_PREFIX . 'enabled', true ) === '1';
 }
 
+// Prezzo di riferimento su cui calcolare lo sconto: sul prodotto variabile
+// (es. formati/varianti diverse) get_regular_price() del "padre" è vuoto —
+// ogni variante ha il proprio prezzo. Usiamo il prezzo minimo tra le
+// varianti come base per mostrare lo sconto sulla pagina prodotto.
+function lmpo_get_reference_price( $product ): float {
+    if ( ! $product ) return 0.0;
+    if ( $product->is_type( 'variable' ) ) {
+        $min = $product->get_variation_regular_price( 'min', true );
+        return $min !== '' ? (float) $min : 0.0;
+    }
+    return (float) $product->get_regular_price();
+}
+
 function lmpo_get_discounted_price( float $original_price, int $product_id ): float {
     $type  = get_post_meta( $product_id, LMPO_PREFIX . 'discount_type', true ) ?: 'percentage';
     $value = (float) get_post_meta( $product_id, LMPO_PREFIX . 'discount_value', true );
@@ -331,7 +344,7 @@ add_action( 'woocommerce_after_add_to_cart_button', function () {
     $note  = get_post_meta( $product->get_id(), LMPO_PREFIX . 'note', true );
     $date  = get_post_meta( $product->get_id(), LMPO_PREFIX . 'date', true );
 
-    $original   = (float) $product->get_regular_price();
+    $original   = lmpo_get_reference_price( $product );
     $discounted = lmpo_get_discounted_price( $original, $product->get_id() );
 
     echo '<div class="lmpo-box">';
@@ -433,7 +446,7 @@ add_action( 'wp_head', function () {
 add_filter( 'woocommerce_get_price_html', function ( string $html, $product ) {
     if ( ! $product || ! lmpo_is_enabled( $product->get_id() ) ) return $html;
 
-    $original   = (float) $product->get_regular_price();
+    $original   = lmpo_get_reference_price( $product );
     $discounted = lmpo_get_discounted_price( $original, $product->get_id() );
 
     if ( $discounted >= $original || $original <= 0 ) return $html;
