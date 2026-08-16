@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Lamacupa Preordina
- * Description: Attiva il preordine con sconto su singoli prodotti — acquisto diretto (no raccolta email), integrato con carrello e checkout WooCommerce. Non forza la disponibilità del prodotto: si applica solo se il prodotto è già acquistabile.
- * Version:     1.1.0
+ * Description: Attiva il preordine con sconto su singoli prodotti — acquisto diretto (no raccolta email), integrato con carrello e checkout WooCommerce. Permette l'acquisto anche se il prodotto risulta "Esaurito" (senza modificare l'etichetta di disponibilità mostrata in pagina); marca l'articolo come preordine in carrello, email d'ordine e in un elenco ordini dedicato.
+ * Version:     2.0.0
  * Author:      Simply APP / Origine Digitale
  */
 
@@ -21,6 +21,128 @@ add_action( 'plugins_loaded', function () {
         } );
     }
 } );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACQUISTO ANCHE DA "ESAURITO" — solo per prodotti con preordine attivo.
+//
+// Il badge/etichetta "Esaurito" mostrato in pagina NON cambia: i filtri qui
+// sotto si attivano solo durante la richiesta che aggiunge il prodotto al
+// carrello (rilevata dai parametri della richiesta stessa), non durante la
+// normale visualizzazione della pagina prodotto o dello shop — quindi lo
+// stato "Esaurito" resta visibile ovunque tranne che nel controllo interno
+// che altrimenti bloccherebbe l'acquisto.
+// ─────────────────────────────────────────────────────────────────────────────
+
+add_action( 'wp_loaded', function () {
+    $product_id = 0;
+    if ( isset( $_REQUEST['add-to-cart'] ) ) {
+        $product_id = absint( $_REQUEST['add-to-cart'] );
+    } elseif ( isset( $_REQUEST['product_id'] ) ) {
+        $product_id = absint( $_REQUEST['product_id'] );
+    }
+    $variation_id = isset( $_REQUEST['variation_id'] ) ? absint( $_REQUEST['variation_id'] ) : 0;
+
+    if ( ! $product_id && ! $variation_id ) {
+        return;
+    }
+    $target = $variation_id ?: $product_id;
+    if ( lmpo_is_enabled( $target ) || ( $product_id && lmpo_is_enabled( $product_id ) ) ) {
+        add_filter( 'woocommerce_product_is_in_stock', '__return_true', 999 );
+        add_filter( 'woocommerce_variation_is_in_stock', '__return_true', 999 );
+        add_filter( 'woocommerce_product_backorders_allowed', '__return_true', 999 );
+    }
+}, 5 );
+
+// Selettore variazioni (prodotti variabili): il JS blocca il pulsante e mostra
+// "Scegli un'altra combinazione" se la variazione risulta esaurita nei dati
+// che WooCommerce invia al browser. Forziamo "disponibile" in quei dati per
+// le variazioni con preordine attivo, senza toccare il loro stato reale.
+add_filter( 'woocommerce_available_variation', function ( array $data, $product, $variation ) {
+    if ( lmpo_is_enabled( $variation->get_id() ) || lmpo_is_enabled( $product->get_id() ) ) {
+        $data['is_in_stock']    = true;
+        $data['is_purchasable'] = true;
+    }
+    return $data;
+}, 20, 3 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CARRELLO/CHECKOUT — flag ordine + meta riga per email e amministrazione
+// ─────────────────────────────────────────────────────────────────────────────
+
+add_action( 'woocommerce_checkout_create_order_line_item', function ( $item, $cart_item_key, $values, $order ) {
+    $product_id = $values['product_id'] ?? 0;
+    if ( ! lmpo_is_enabled( $product_id ) ) {
+        return;
+    }
+    $date = get_post_meta( $product_id, LMPO_PREFIX . 'date', true );
+    $item->add_meta_data( 'Preordine', 'Sì', true );
+    if ( $date ) {
+        $item->add_meta_data( 'Consegna prevista', $date, true );
+    }
+    $order->update_meta_data( '_lmpo_has_preorder', 'yes' );
+}, 10, 4 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADMIN — elenco ordini in preordine, separato dagli altri
+// ─────────────────────────────────────────────────────────────────────────────
+
+add_action( 'admin_menu', function () {
+    add_submenu_page(
+        'woocommerce',
+        'Ordini in preordine',
+        '🕒 Preordini',
+        'manage_woocommerce',
+        'lmpo-preorders',
+        'lmpo_render_preorders_page'
+    );
+} );
+
+function lmpo_render_preorders_page(): void {
+    $orders = wc_get_orders( array(
+        'limit'      => 200,
+        'orderby'    => 'date',
+        'order'      => 'DESC',
+        'meta_key'   => '_lmpo_has_preorder',
+        'meta_value' => 'yes',
+    ) );
+
+    echo '<div class="wrap"><h1>🕒 Ordini in preordine</h1>';
+
+    if ( ! $orders ) {
+        echo '<p>Nessun ordine in preordine al momento.</p></div>';
+        return;
+    }
+
+    echo '<table class="widefat striped" style="margin-top:16px">';
+    echo '<thead><tr><th>Ordine</th><th>Data</th><th>Cliente</th><th>Stato</th><th>Totale</th><th>Prodotti in preordine</th></tr></thead><tbody>';
+
+    foreach ( $orders as $order ) {
+        $edit_link = method_exists( $order, 'get_edit_order_url' )
+            ? $order->get_edit_order_url()
+            : admin_url( 'post.php?post=' . $order->get_id() . '&action=edit' );
+
+        $names = array();
+        foreach ( $order->get_items() as $item ) {
+            if ( $item->get_meta( 'Preordine' ) ) {
+                $delivery = $item->get_meta( 'Consegna prevista' );
+                $names[]  = $item->get_name() . ( $delivery ? ' (' . $delivery . ')' : '' );
+            }
+        }
+
+        printf(
+            '<tr><td><a href="%s">#%s</a></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+            esc_url( $edit_link ),
+            esc_html( $order->get_order_number() ),
+            esc_html( wc_format_datetime( $order->get_date_created() ) ),
+            esc_html( $order->get_formatted_billing_full_name() ),
+            esc_html( wc_get_order_status_name( $order->get_status() ) ),
+            wp_kses_post( $order->get_formatted_order_total() ),
+            esc_html( implode( ', ', $names ) )
+        );
+    }
+
+    echo '</tbody></table></div>';
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN — META BOX SUL PRODOTTO
@@ -275,9 +397,19 @@ add_action( 'wp_head', function () {
         padding: 4px 12px;
         margin-bottom: 8px;
     }
-    .lmpo-price { font-size: 16px; margin: 6px 0; }
+    .lmpo-price {
+        font-size: 18px;
+        margin: 10px 0;
+        padding: 8px 12px;
+        background: #fff;
+        border: 1px solid #e8c56a;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
     .lmpo-price-old { text-decoration: line-through; color: #999; font-size: 14px; }
-    .lmpo-price-new { color: #8a5c00; font-weight: 700; font-size: 18px; }
+    .lmpo-price-new { color: #8a5c00; font-weight: 800; font-size: 20px; }
     .lmpo-discount-tag {
         display: inline-block;
         background: #c0392b;
@@ -365,7 +497,9 @@ add_filter( 'woocommerce_cart_item_subtotal', function ( string $subtotal_html, 
 // Etichetta "Preordine" accanto al nome prodotto nel carrello/checkout
 add_filter( 'woocommerce_cart_item_name', function ( string $name, array $cart_item ) {
     if ( lmpo_is_enabled( $cart_item['product_id'] ) ) {
-        $name .= ' <span style="display:inline-block;margin-left:6px;padding:2px 8px;background:#fff3d6;border:1px solid #e8c56a;border-radius:12px;font-size:11px;font-weight:700;color:#8a5c00;">PREORDINE</span>';
+        $date = get_post_meta( $cart_item['product_id'], LMPO_PREFIX . 'date', true );
+        $label = 'PREORDINE' . ( $date ? ' · consegna prevista ' . esc_html( $date ) : '' );
+        $name .= ' <span style="display:inline-block;margin-left:6px;padding:2px 8px;background:#fff3d6;border:1px solid #e8c56a;border-radius:12px;font-size:11px;font-weight:700;color:#8a5c00;">' . $label . '</span>';
     }
     return $name;
 }, 10, 2 );
