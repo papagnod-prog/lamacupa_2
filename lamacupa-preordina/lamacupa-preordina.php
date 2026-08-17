@@ -478,14 +478,15 @@ add_action( 'wp_head', function () {
 // ─────────────────────────────────────────────────────────────────────────────
 
 add_filter( 'woocommerce_get_price_html', function ( string $html, $product ) {
-    if ( ! $product || ! lmpo_is_enabled( $product->get_id() ) ) return $html;
+    if ( ! $product || ! lmpo_is_enabled_for( $product ) ) return $html;
+    $meta_id = $product->get_parent_id() ?: $product->get_id();
 
     $original   = lmpo_get_reference_price( $product );
-    $discounted = lmpo_get_discounted_price( $original, $product->get_id() );
+    $discounted = lmpo_get_discounted_price( $original, $meta_id );
 
     if ( $discounted >= $original || $original <= 0 ) return $html;
 
-    $label = lmpo_get_discount_label( $product->get_id() );
+    $label = lmpo_get_discount_label( $meta_id );
     $tag   = $label ? ' <span class="lmpo-discount-tag-inline">' . $label . '</span>' : '';
 
     return '<del>' . wc_price( $original ) . '</del> <ins>' . wc_price( $discounted ) . '</ins>' . $tag;
@@ -501,10 +502,11 @@ add_action( 'woocommerce_before_calculate_totals', function ( $cart ) {
 
     foreach ( $cart->get_cart() as $item ) {
         $product = $item['data'];
-        if ( ! lmpo_is_enabled( $product->get_id() ) ) continue;
+        if ( ! lmpo_is_enabled_for( $product ) ) continue;
+        $meta_id = $product->get_parent_id() ?: $product->get_id();
 
         $original   = (float) $product->get_regular_price();
-        $discounted = lmpo_get_discounted_price( $original, $product->get_id() );
+        $discounted = lmpo_get_discounted_price( $original, $meta_id );
 
         if ( $discounted > 0 && $discounted < $original ) {
             $product->set_price( $discounted );
@@ -515,13 +517,14 @@ add_action( 'woocommerce_before_calculate_totals', function ( $cart ) {
 // Prezzo unitario mostrato nella pagina carrello (colonna "Prezzo")
 add_filter( 'woocommerce_cart_item_price', function ( string $price_html, array $cart_item, string $cart_item_key ) {
     $product = $cart_item['data'];
-    if ( ! lmpo_is_enabled( $product->get_id() ) ) return $price_html;
+    if ( ! lmpo_is_enabled_for( $product ) ) return $price_html;
+    $meta_id = $product->get_parent_id() ?: $product->get_id();
 
     $original   = (float) $product->get_regular_price();
-    $discounted = lmpo_get_discounted_price( $original, $product->get_id() );
+    $discounted = lmpo_get_discounted_price( $original, $meta_id );
     if ( $discounted >= $original || $original <= 0 ) return $price_html;
 
-    $label = lmpo_get_discount_label( $product->get_id() );
+    $label = lmpo_get_discount_label( $meta_id );
     $tag   = $label ? ' <span class="lmpo-discount-tag-inline">' . $label . '</span>' : '';
 
     return '<del>' . wc_price( $original ) . '</del> <ins>' . wc_price( $discounted ) . '</ins>' . $tag;
@@ -530,10 +533,11 @@ add_filter( 'woocommerce_cart_item_price', function ( string $price_html, array 
 // Subtotale (prezzo × quantità) mostrato in carrello e nel riepilogo checkout
 add_filter( 'woocommerce_cart_item_subtotal', function ( string $subtotal_html, array $cart_item, string $cart_item_key ) {
     $product = $cart_item['data'];
-    if ( ! lmpo_is_enabled( $product->get_id() ) ) return $subtotal_html;
+    if ( ! lmpo_is_enabled_for( $product ) ) return $subtotal_html;
+    $meta_id = $product->get_parent_id() ?: $product->get_id();
 
     $original   = (float) $product->get_regular_price();
-    $discounted = lmpo_get_discounted_price( $original, $product->get_id() );
+    $discounted = lmpo_get_discounted_price( $original, $meta_id );
     if ( $discounted >= $original || $original <= 0 ) return $subtotal_html;
 
     $qty = (int) $cart_item['quantity'];
@@ -543,8 +547,12 @@ add_filter( 'woocommerce_cart_item_subtotal', function ( string $subtotal_html, 
 
 // Etichetta "Preordine" accanto al nome prodotto nel carrello/checkout
 add_filter( 'woocommerce_cart_item_name', function ( string $name, array $cart_item ) {
-    if ( lmpo_is_enabled( $cart_item['product_id'] ) ) {
-        $date = get_post_meta( $cart_item['product_id'], LMPO_PREFIX . 'date', true );
+    $meta_id = ! empty( $cart_item['product_id'] ) ? (int) $cart_item['product_id'] : 0;
+    if ( ! $meta_id && ! empty( $cart_item['data'] ) ) {
+        $meta_id = $cart_item['data']->get_parent_id() ?: $cart_item['data']->get_id();
+    }
+    if ( lmpo_is_enabled( $meta_id ) ) {
+        $date = get_post_meta( $meta_id, LMPO_PREFIX . 'date', true );
         $label = 'PREORDINE' . ( $date ? ' · consegna prevista ' . esc_html( $date ) : '' );
         $name .= ' <span style="display:inline-block;margin-left:6px;padding:2px 8px;background:#fff3d6;border:1px solid #e8c56a;border-radius:12px;font-size:11px;font-weight:700;color:#8a5c00;">' . $label . '</span>';
     }
