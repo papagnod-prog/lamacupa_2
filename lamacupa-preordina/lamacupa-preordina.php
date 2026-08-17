@@ -34,29 +34,36 @@ add_action( 'plugins_loaded', function () {
 // originale passa invariato, quindi "Esaurito" resta visibile come prima.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Impostato a true appena WooCommerce inizia davvero a processare l'ordine
+// (scatta sempre, sia con JavaScript attivo che nel classico invio modulo) —
+// copre il preciso momento dell'invio ordine, distinto sia dall'aggiunta al
+// carrello sia dal semplice caricamento della pagina checkout.
+$GLOBALS['lmpo_checkout_processing'] = false;
+add_action( 'woocommerce_checkout_process', function () {
+    $GLOBALS['lmpo_checkout_processing'] = true;
+}, 1 );
+
 function lmpo_stock_bypass_active(): bool {
-    static $active = null;
-    if ( $active !== null ) {
-        return $active;
+    if ( ! empty( $GLOBALS['lmpo_checkout_processing'] ) ) {
+        return true;
     }
-    $active = false;
 
     // Aggiunta al carrello — form classico o AJAX (product_id + quantity)
     if ( isset( $_REQUEST['add-to-cart'] ) || ( isset( $_REQUEST['product_id'] ) && isset( $_REQUEST['quantity'] ) ) ) {
-        $active = true;
+        return true;
     }
     // Pagina carrello o checkout (la revalidazione scorte avviene qui ad ogni caricamento)
-    if ( ! $active && function_exists( 'is_cart' ) && ( is_cart() || is_checkout() ) ) {
-        $active = true;
+    if ( function_exists( 'is_cart' ) && ( is_cart() || is_checkout() ) ) {
+        return true;
     }
-    // Azioni AJAX WooCommerce di carrello/checkout (aggiorna carrello, applica coupon, ricalcola ordine…)
-    if ( ! $active && isset( $_REQUEST['wc-ajax'] ) ) {
+    // Azioni AJAX WooCommerce di carrello/checkout (aggiorna carrello, applica coupon, ricalcola ordine, invio ordine…)
+    if ( isset( $_REQUEST['wc-ajax'] ) ) {
         $ajax_actions = array( 'add_to_cart', 'update_cart', 'update_order_review', 'checkout', 'apply_coupon', 'remove_coupon', 'get_refreshed_fragments' );
         if ( in_array( wp_unslash( $_REQUEST['wc-ajax'] ), $ajax_actions, true ) ) {
-            $active = true;
+            return true;
         }
     }
-    return $active;
+    return false;
 }
 
 // Nota: le variazioni usano lo STESSO filtro dei prodotti semplici per
