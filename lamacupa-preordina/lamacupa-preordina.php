@@ -25,33 +25,63 @@ add_action( 'plugins_loaded', function () {
 // ─────────────────────────────────────────────────────────────────────────────
 // ACQUISTO ANCHE DA "ESAURITO" — solo per prodotti con preordine attivo.
 //
-// Il badge/etichetta "Esaurito" mostrato in pagina NON cambia: i filtri qui
-// sotto si attivano solo durante la richiesta che aggiunge il prodotto al
-// carrello (rilevata dai parametri della richiesta stessa), non durante la
-// normale visualizzazione della pagina prodotto o dello shop — quindi lo
-// stato "Esaurito" resta visibile ovunque tranne che nel controllo interno
-// che altrimenti bloccherebbe l'acquisto.
+// Il badge/etichetta "Esaurito" mostrato in pagina prodotto/shop NON cambia:
+// i filtri sotto restituiscono "disponibile" solo quando ENTRAMBE le
+// condizioni sono vere — (1) siamo in un contesto di carrello/checkout
+// (aggiunta al carrello, pagina carrello, pagina checkout, o le relative
+// azioni AJAX) e (2) il prodotto specifico ha il preordine attivo. Sulla
+// pagina prodotto o nello shop (nessuna di queste condizioni) il valore
+// originale passa invariato, quindi "Esaurito" resta visibile come prima.
 // ─────────────────────────────────────────────────────────────────────────────
 
-add_action( 'wp_loaded', function () {
-    $product_id = 0;
-    if ( isset( $_REQUEST['add-to-cart'] ) ) {
-        $product_id = absint( $_REQUEST['add-to-cart'] );
-    } elseif ( isset( $_REQUEST['product_id'] ) ) {
-        $product_id = absint( $_REQUEST['product_id'] );
+function lmpo_stock_bypass_active(): bool {
+    static $active = null;
+    if ( $active !== null ) {
+        return $active;
     }
-    $variation_id = isset( $_REQUEST['variation_id'] ) ? absint( $_REQUEST['variation_id'] ) : 0;
+    $active = false;
 
-    if ( ! $product_id && ! $variation_id ) {
-        return;
+    // Aggiunta al carrello — form classico o AJAX (product_id + quantity)
+    if ( isset( $_REQUEST['add-to-cart'] ) || ( isset( $_REQUEST['product_id'] ) && isset( $_REQUEST['quantity'] ) ) ) {
+        $active = true;
     }
-    $target = $variation_id ?: $product_id;
-    if ( lmpo_is_enabled( $target ) || ( $product_id && lmpo_is_enabled( $product_id ) ) ) {
-        add_filter( 'woocommerce_product_is_in_stock', '__return_true', 999 );
-        add_filter( 'woocommerce_variation_is_in_stock', '__return_true', 999 );
-        add_filter( 'woocommerce_product_backorders_allowed', '__return_true', 999 );
+    // Pagina carrello o checkout (la revalidazione scorte avviene qui ad ogni caricamento)
+    if ( ! $active && function_exists( 'is_cart' ) && ( is_cart() || is_checkout() ) ) {
+        $active = true;
     }
-}, 5 );
+    // Azioni AJAX WooCommerce di carrello/checkout (aggiorna carrello, applica coupon, ricalcola ordine…)
+    if ( ! $active && isset( $_REQUEST['wc-ajax'] ) ) {
+        $ajax_actions = array( 'add_to_cart', 'update_cart', 'update_order_review', 'checkout', 'apply_coupon', 'remove_coupon', 'get_refreshed_fragments' );
+        if ( in_array( wp_unslash( $_REQUEST['wc-ajax'] ), $ajax_actions, true ) ) {
+            $active = true;
+        }
+    }
+    return $active;
+}
+
+add_filter( 'woocommerce_product_is_in_stock', function ( $in_stock, $product ) {
+    if ( $in_stock || ! $product ) return $in_stock;
+    if ( lmpo_stock_bypass_active() && lmpo_is_enabled( $product->get_id() ) ) {
+        return true;
+    }
+    return $in_stock;
+}, 999, 2 );
+
+add_filter( 'woocommerce_variation_is_in_stock', function ( $in_stock, $variation ) {
+    if ( $in_stock || ! $variation ) return $in_stock;
+    if ( lmpo_stock_bypass_active() && ( lmpo_is_enabled( $variation->get_id() ) || lmpo_is_enabled( $variation->get_parent_id() ) ) ) {
+        return true;
+    }
+    return $in_stock;
+}, 999, 2 );
+
+add_filter( 'woocommerce_product_backorders_allowed', function ( $allowed, $product_id, $product ) {
+    if ( $allowed ) return $allowed;
+    if ( lmpo_stock_bypass_active() && lmpo_is_enabled( $product_id ) ) {
+        return true;
+    }
+    return $allowed;
+}, 999, 3 );
 
 // Selettore variazioni (prodotti variabili): il JS blocca il pulsante e mostra
 // "Scegli un'altra combinazione" se la variazione risulta esaurita nei dati
