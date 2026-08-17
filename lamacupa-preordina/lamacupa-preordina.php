@@ -63,6 +63,12 @@ function lmpo_stock_bypass_active(): bool {
             return true;
         }
     }
+    // Checkout "a blocchi" (Store API REST) — non passa dal classico
+    // woocommerce_checkout_process, ma da una chiamata JSON separata a
+    // /wp-json/wc/store/v1/... (cart, checkout, ecc.)
+    if ( ! empty( $_SERVER['REQUEST_URI'] ) && strpos( $_SERVER['REQUEST_URI'], '/wc/store/v1/' ) !== false ) {
+        return true;
+    }
     return false;
 }
 
