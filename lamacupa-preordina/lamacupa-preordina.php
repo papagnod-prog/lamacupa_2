@@ -59,17 +59,13 @@ function lmpo_stock_bypass_active(): bool {
     return $active;
 }
 
+// Nota: le variazioni usano lo STESSO filtro dei prodotti semplici per
+// is_in_stock() — non esiste un filtro separato "per variazione" in
+// WooCommerce — quindi un solo filtro copre entrambi i casi, purché
+// controlli anche l'id del prodotto "padre" tramite lmpo_is_enabled_for().
 add_filter( 'woocommerce_product_is_in_stock', function ( $in_stock, $product ) {
     if ( $in_stock || ! $product ) return $in_stock;
-    if ( lmpo_stock_bypass_active() && lmpo_is_enabled( $product->get_id() ) ) {
-        return true;
-    }
-    return $in_stock;
-}, 999, 2 );
-
-add_filter( 'woocommerce_variation_is_in_stock', function ( $in_stock, $variation ) {
-    if ( $in_stock || ! $variation ) return $in_stock;
-    if ( lmpo_stock_bypass_active() && ( lmpo_is_enabled( $variation->get_id() ) || lmpo_is_enabled( $variation->get_parent_id() ) ) ) {
+    if ( lmpo_stock_bypass_active() && lmpo_is_enabled_for( $product ) ) {
         return true;
     }
     return $in_stock;
@@ -77,7 +73,7 @@ add_filter( 'woocommerce_variation_is_in_stock', function ( $in_stock, $variatio
 
 add_filter( 'woocommerce_product_backorders_allowed', function ( $allowed, $product_id, $product ) {
     if ( $allowed ) return $allowed;
-    if ( lmpo_stock_bypass_active() && lmpo_is_enabled( $product_id ) ) {
+    if ( lmpo_stock_bypass_active() && lmpo_is_enabled_for( $product ) ) {
         return true;
     }
     return $allowed;
@@ -307,6 +303,18 @@ add_action( 'manage_product_posts_custom_column', function ( string $column, int
 
 function lmpo_is_enabled( $product_id ): bool {
     return get_post_meta( $product_id, LMPO_PREFIX . 'enabled', true ) === '1';
+}
+
+// Come lmpo_is_enabled(), ma su un oggetto prodotto/variazione: se è una
+// variazione, il preordine è impostato sul prodotto "padre" (id diverso
+// dalla variazione stessa), quindi controlla anche quello.
+function lmpo_is_enabled_for( $product ): bool {
+    if ( ! $product ) return false;
+    if ( lmpo_is_enabled( $product->get_id() ) ) return true;
+    if ( is_callable( array( $product, 'get_parent_id' ) ) && $product->get_parent_id() ) {
+        return lmpo_is_enabled( $product->get_parent_id() );
+    }
+    return false;
 }
 
 // Prezzo di riferimento su cui calcolare lo sconto: sul prodotto variabile
