@@ -344,21 +344,17 @@ add_action( 'woocommerce_after_add_to_cart_button', function () {
     $note  = get_post_meta( $product->get_id(), LMPO_PREFIX . 'note', true );
     $date  = get_post_meta( $product->get_id(), LMPO_PREFIX . 'date', true );
 
-    $original   = lmpo_get_reference_price( $product );
-    $discounted = lmpo_get_discounted_price( $original, $product->get_id() );
+    // Etichetta sconto: dipende solo dal valore impostato nel pannello, non
+    // dal prezzo del prodotto — sempre visibile, anche sui prodotti
+    // variabili dove il prezzo "di riferimento" è meno immediato da calcolare.
+    // Il prezzo scontato vero e proprio si vede in carrello/checkout.
+    $discount_label = lmpo_get_discount_label( $product->get_id() );
 
     echo '<div class="lmpo-box">';
     echo '<div class="lmpo-badge">🕒 ' . esc_html( $badge ) . '</div>';
 
-    if ( $discounted < $original && $original > 0 ) {
-        $discount_label = lmpo_get_discount_label( $product->get_id() );
-        echo '<div class="lmpo-price">';
-        echo '<span class="lmpo-price-old">' . wc_price( $original ) . '</span> ';
-        echo '<span class="lmpo-price-new">' . wc_price( $discounted ) . '</span> ';
-        if ( $discount_label ) {
-            echo '<span class="lmpo-discount-tag">' . $discount_label . '</span>';
-        }
-        echo '</div>';
+    if ( $discount_label ) {
+        echo '<div class="lmpo-price"><span class="lmpo-price-new">Sconto preordine: ' . esc_html( $discount_label ) . '</span></div>';
     }
 
     if ( $note )  echo '<p class="lmpo-note">' . esc_html( $note ) . '</p>';
