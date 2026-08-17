@@ -76,7 +76,7 @@
     { id:'a-orci',   lbl:'Orci in terracotta', sub:'Sezione edizione speciale' }
   ];
   var PAGEDEFS = [
-    { slug:'storia', name:'La Storia', hero:'story-hero' },
+    { slug:'storia', name:'La Storia', hero:'storia-hero' },
     { slug:'olio', name:"L'Olio", hero:'' },
     { slug:'orci', name:'Gli Orci', hero:'orci-hero' },
     { slug:'shop', name:'Shop', hero:'' },
