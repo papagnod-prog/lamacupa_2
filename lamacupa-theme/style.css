@@ -453,6 +453,20 @@ footer{background:var(--olive-deep);color:rgba(248,243,231,.75);padding:80px 0 3
 .prose a{color:var(--gold-deep);text-decoration:underline;text-underline-offset:3px}
 .prose h3{font-size:clamp(20px,2.2vw,26px);font-weight:500;color:var(--olive);margin:36px 0 12px}
 
+/* ---- Compatibilità shortcode Woodmart/WPBakery (articoli migrati) ---- */
+.legacy-row{margin:0 0 8px}
+.legacy-col{margin:0}
+.legacy-text{margin-bottom:8px}
+.legacy-bullet{padding-left:22px;position:relative}
+.legacy-bullet::before{content:"—";position:absolute;left:0;color:var(--gold-deep)}
+.legacy-title h2{margin-top:52px}
+.legacy-title .legacy-subtitle{font-size:15px;letter-spacing:.06em;color:var(--ink-faint);margin:-8px 0 22px;text-transform:uppercase}
+.legacy-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:34px 0;max-width:none;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:0 40px;box-sizing:border-box}
+.legacy-gallery img{width:100%;height:220px;object-fit:cover;border-radius:6px}
+.legacy-video{margin:34px 0}
+.legacy-video iframe{width:100%;aspect-ratio:16/9;border-radius:6px;border:none}
+@media (max-width:700px){.legacy-gallery{grid-template-columns:repeat(2,1fr);padding:0 20px}.legacy-gallery img{height:150px}}
+
 .shop-pagination .page-numbers{display:inline-grid;place-items:center;min-width:42px;height:42px;padding:0 8px;margin:0 4px;
   border:1px solid var(--line);border-radius:8px;color:var(--olive);text-decoration:none;font-size:14px;transition:.16s}
 .shop-pagination .page-numbers.current{background:var(--olive);color:var(--cream);border-color:var(--olive)}

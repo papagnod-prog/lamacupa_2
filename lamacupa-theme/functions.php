@@ -19,6 +19,8 @@ define( 'LAMACUPA_THEME_VER', '1.5.0' );
 /* ---- Moduli del tema ---- */
 // Bootstrap WooCommerce: configura negozio, categorie, prodotti, spedizioni e pagamenti.
 require_once get_template_directory() . '/inc/woocommerce-setup.php';
+// Compatibilità con le shortcode Woodmart/WPBakery negli articoli importati dal vecchio sito.
+require_once get_template_directory() . '/inc/legacy-shortcodes.php';
 
 /* ---- Supporti del tema ---- */
 add_action( 'after_setup_theme', function () {
