@@ -1,6 +1,11 @@
 /**
- * Lightbox leggero per le gallerie negli articoli del blog
- * ([woodmart_gallery] tradotto in .legacy-gallery).
+ * Lightbox leggero per le gallerie negli articoli del blog.
+ *
+ * Funziona su due tipi di galleria:
+ *  - .legacy-gallery  → gallerie Woodmart tradotte dagli articoli migrati
+ *  - .wp-block-gallery / .gallery → il blocco "Galleria" nativo di
+ *    WordPress, da usare per i NUOVI articoli (Aggiungi blocco → Galleria,
+ *    trascina le foto, pubblica — nessuna shortcode da scrivere a mano).
  *
  * Nessuna dipendenza: al click su una miniatura apre l'immagine a schermo
  * intero, con frecce per scorrere avanti/indietro nella stessa galleria,
@@ -10,6 +15,19 @@
   'use strict';
 
   var overlay, imgEl, counterEl, items = [], currentIndex = 0;
+
+  function biggestSrc(img) {
+    if (img.dataset.fullUrl) return img.dataset.fullUrl;
+    if (img.srcset) {
+      var candidates = img.srcset.split(',').map(function (s) {
+        var parts = s.trim().split(' ');
+        return { url: parts[0], w: parseInt(parts[1], 10) || 0 };
+      });
+      candidates.sort(function (a, b) { return b.w - a.w; });
+      if (candidates[0] && candidates[0].url) return candidates[0].url;
+    }
+    return img.src;
+  }
 
   function buildOverlay() {
     if (overlay) return;
@@ -42,10 +60,9 @@
   function show(index) {
     if (!items.length) return;
     currentIndex = (index + items.length) % items.length;
-    var full = items[currentIndex].getAttribute('href');
-    var alt = items[currentIndex].querySelector('img') ? items[currentIndex].querySelector('img').alt : '';
-    imgEl.src = full;
-    imgEl.alt = alt;
+    var it = items[currentIndex];
+    imgEl.src = it.full;
+    imgEl.alt = it.alt || '';
     counterEl.textContent = (currentIndex + 1) + ' / ' + items.length;
   }
 
@@ -73,15 +90,36 @@
   });
 
   document.addEventListener('DOMContentLoaded', function () {
-    var galleries = document.querySelectorAll('.legacy-gallery');
-    galleries.forEach(function (gallery) {
+    var groups = [];
+
+    // Gallerie Woodmart tradotte (articoli migrati).
+    document.querySelectorAll('.legacy-gallery').forEach(function (gallery) {
       var links = Array.prototype.slice.call(gallery.querySelectorAll('a.legacy-lightbox-item'));
-      links.forEach(function (link, i) {
-        link.addEventListener('click', function (e) {
+      if (!links.length) return;
+      groups.push(links.map(function (a) {
+        var img = a.querySelector('img');
+        return { el: a, full: a.getAttribute('href'), alt: img ? img.alt : '' };
+      }));
+    });
+
+    // Blocco "Galleria" nativo di WordPress (nuovi articoli).
+    document.querySelectorAll('.wp-block-gallery, .gallery').forEach(function (gallery) {
+      var imgs = Array.prototype.slice.call(gallery.querySelectorAll('img'));
+      if (!imgs.length) return;
+      groups.push(imgs.map(function (img) {
+        var link = img.closest('a');
+        return { el: link || img, full: link ? link.getAttribute('href') : biggestSrc(img), alt: img.alt };
+      }));
+    });
+
+    groups.forEach(function (group) {
+      group.forEach(function (item, i) {
+        item.el.addEventListener('click', function (e) {
           e.preventDefault();
-          open(links, i);
+          open(group, i);
         });
       });
     });
   });
 })();
+

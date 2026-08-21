@@ -469,6 +469,11 @@ footer{background:var(--olive-deep);color:rgba(248,243,231,.75);padding:80px 0 3
 .legacy-video iframe{width:100%;aspect-ratio:16/9;border-radius:6px;border:none}
 @media (max-width:700px){.legacy-gallery{grid-template-columns:repeat(2,1fr);padding:0 20px}.legacy-gallery img{height:150px}}
 
+/* Blocco "Galleria" nativo di WordPress (nuovi articoli) — solo il cursore
+ * e l'effetto hover, il layout a griglia lo gestisce già WordPress stesso. */
+.prose .wp-block-gallery img,.prose .gallery img{cursor:zoom-in;transition:opacity .2s}
+.prose .wp-block-gallery img:hover,.prose .gallery img:hover{opacity:.9}
+
 /* ---- Lightbox galleria blog ---- */
 .lmcp-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(26,26,20,.94);display:none;align-items:center;justify-content:center}
 .lmcp-lightbox.is-open{display:flex}
