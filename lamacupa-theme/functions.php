@@ -97,6 +97,11 @@ add_action( 'wp_enqueue_scripts', function () {
 		'checkoutUrl' => function_exists( 'wc_get_checkout_url' ) ? wc_get_checkout_url() : home_url( '/shop/' ),
 		'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
 	) );
+
+	// Lightbox per le gallerie foto negli articoli del blog.
+	if ( is_singular( 'post' ) ) {
+		wp_enqueue_script( 'lamacupa-lightbox', get_template_directory_uri() . '/assets/lightbox.js', array(), LAMACUPA_THEME_VER, true );
+	}
 } );
 
 /* ---- Drawer carrello: markup stampato a fine pagina su tutto il sito ---- */

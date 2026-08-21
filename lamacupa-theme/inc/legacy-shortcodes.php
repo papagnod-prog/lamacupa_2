@@ -70,17 +70,23 @@ add_shortcode( 'woodmart_title', function ( $atts ) {
 } );
 
 add_shortcode( 'woodmart_gallery', function ( $atts ) {
+	static $gallery_n = 0;
+	$gallery_n++;
+
 	$atts = shortcode_atts( array( 'images' => '' ), $atts, 'woodmart_gallery' );
 	$ids  = array_filter( array_map( 'trim', explode( ',', $atts['images'] ) ) );
 	if ( ! $ids ) {
 		return '';
 	}
 
-	$html = '<div class="legacy-gallery">';
+	$html = '<div class="legacy-gallery" data-gallery="lmcp-gal-' . $gallery_n . '">';
 	foreach ( $ids as $id ) {
-		if ( wp_attachment_is_image( $id ) ) {
-			$html .= wp_get_attachment_image( $id, 'medium_large', false, array( 'loading' => 'lazy' ) );
+		if ( ! wp_attachment_is_image( $id ) ) {
+			continue;
 		}
+		$full  = wp_get_attachment_image_url( $id, 'full' );
+		$thumb = wp_get_attachment_image( $id, 'medium_large', false, array( 'loading' => 'lazy' ) );
+		$html .= '<a href="' . esc_url( $full ) . '" class="legacy-lightbox-item">' . $thumb . '</a>';
 	}
 	$html .= '</div>';
 	return $html;
